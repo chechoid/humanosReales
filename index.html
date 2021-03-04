@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>People Analytics con R</title>
+    <meta charset="utf-8" />
+    <meta name="author" content=" Sergio Garcia Mora   Data 4HR" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/font-awesome/css/fontawesome-all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# People Analytics con R
+## limpiando datos con dplyr
+### <i class="fab  fa-linkedin "></i> <a href="https://www.linkedin.com/in/sergiogarciamora/">Sergio Garcia Mora</a><br><br><i class="fas  fa-smile-wink "></i> <a href="https://data-4hr.com">Data 4HR</a>
+### HR Bootcamp - Humanos Reales
+
+---
+
+
+
+
+
+
+# Sergio García Mora
+
+.left-column[
+&lt;img src="Archivos/eu.jpg" /&gt;
+]
+
+.right-column[
+* ### 🤓 HR Nerd
+* 💪 Lic. en Relaciones del Trabajo con formación en Data Mining
+* ✈️ Fundador de [Data 4HR](https://data-4hr.com/)
+* 💹 SME People Analytics en [Data IQ](https://dataiq.com.ar/)
+* 👩‍🏫 Profesor de People Analytics en ITBA
+* 🍷 Fundador del [Club de R para RRHH](https://r4hr.club)
+* 👑 Meme Manager en varias comunidades
+
+]
+
+
+---
+background-color: #03162C
+class: center middle inverse
+# Empecemos!
+
+&lt;img src="https://media.giphy.com/media/xT1TTBAzDPt5O8vKtW/giphy.gif" width="60%" /&gt;
+
+---
+# Proyectos
+
+Trabajar con proyectos en RStudio hace que todo el trabajo sea más sencillo. Los proyectos crean una carpeta en nuestra PC en donde se almacenarán los archivos, tablas, scripts, y hace que todo sea más organizado.
+
+--
+
+Para crear un proyecto tenés podés entrar en:
+* *File*
+  * *New project*
+
+Y luego poner el nombre de la carpeta.
+
+.pull-left[&lt;img src="Archivos/new_project.png" width="50%" /&gt;]
+
+
+.pull-rigt[&lt;img src="Archivos/new_projecto.png" width="24%" /&gt;]
+
+---
+# Tidy Data
+
+Cuando hacemos algún tutorial, los datos están perfectos, limpios, y prolijos. Y cuando querés aplicar el mismo código a tus propios datos, resulta que no funciona, o tenés que hacer mucho procesamiento de datos para terminar replicando un ejemplo de un tutorial.
+
+--
+
+Por estas razones, la limpieza de datos, suele representar entre el 60 al 80% de cualquier proyecto de Analytics, hasta lograr tener **datos ordenados** (tidy data). Entre algunos principios de *tidy data* podemos mencionar dos:
+
+--
+
+1. Cada variable forma una columna.
+2. Cada observación forma una fila.
+3. Cada tipo de unidad observacional forma una tabla.
+
+---
+# dplyr
+
+
+El paquete **dplyr** es uno de los paquetes embebidos dentro del paquete tidyverse: un conjunto de paquetes destinados a la limpieza y manipulación de datos y que se convirtió en un estándar en la práctica de la limpieza y manipulación de datos en R. `dplyr` fue desarrollado por Hadley Wickham, Romain François, Lionel Henry y Kirill Müller.
+
+Una de las razones por las que se hizo tan popular es por su sintaxis simple, con nombres de funciones que usan palabras muy coloquiales, imitando la forma en la que hablamos.
+
+Usualmente se dice que usamos `dplyr` para hacer *data wrangling*. Así que empecemos a aprender a domar nuestros datos.
+
+&lt;br&gt;
+
+.center[
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/621a9c8c5d7b47c4b6d72e8f01f28d14310e8370/193fc/css/images/hex/dplyr.png" width="15%" /&gt;
+]
+
+---
+# dplyr: Instalación y carga
+
+Al igual que la gran mayoría de los paquetes de R, podemos instalar el paquete directamente desde el script:
+
+
+```r
+# Instalando el paquete individual
+install.packages("dplyr")
+
+# Instalando el conjunto de paquetes de tidyverse
+install.packages("tidyverse")
+```
+
+--
+
+Antes de empezar a usar las funciones de dplyr, tenemos que cargarlo con la función `library()`:
+
+```r
+library(dplyr)
+```
+
+--
+
+
+.pull-left[
+### ¿Cómo nos damos cuenta si un paquete no está cargado?
+]
+
+.pull-right[
+&lt;img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNgc6T4RNTnKcQUvDhLwxuhCilm9PgzEeywA&amp;usqp=CAU" width="40%" /&gt;
+]
+
+---
+class: center
+
+Ahora si...
+# A domar datos!
+&lt;img src="https://media.giphy.com/media/d1Hrg00RXt3dfaFO/giphy.gif" /&gt;
+
+---
+# Los cheatsheets
+## (machete, cola, trencito, copiatín, plage, batería, torpedo, chuleta, chanchullo, etc.)
+
+Los [*cheatsheet*](https://rstudio.com/resources/cheatsheets/) son documentos con resúmenes de las principales funciones de los paquetes más utilizados.
+
+La comunidad de R de hispanoamérica ha traducido unos cuantos, gracias a quienes podemos contar hoy con un cheatsheet en [castellano](https://github.com/rstudio/cheatsheets/raw/master/translations/spanish/data-wrangling-cheatsheet_Spanish.pdf).
+
+.center[
+&lt;img src="https://ep01.epimg.net/verne/imagenes/2019/05/29/articulo/1559124724_625072_1559142707_noticia_normal.jpg" width="30%"/&gt;
+]
+
+---
+# El dataset
+
+Vamos a utilizar una versión abreviada de la 🥝 **Encuesta KIWI de Sueldos de RH** que desarrollamos con el Club de R para RRHH (pueden ver los resultados [en este link](https://rpubs.com/Data4HR/encuesta-kiwi-2020)).
+
+.left-column[
+&lt;img src="https://i.pinimg.com/originals/83/5c/33/835c33d22fd2ae61cbf0c14545524d54.jpg" /&gt;
+
+]
+
+.right-column[
+
+
+```r
+library(dplyr) # Manipulación y limpieza de datos
+library(readr) # Lectura y carga de archivos
+
+# Cargamos encuesta de sueldos
+encuesta &lt;- read_delim("https://raw.githubusercontent.com/r4hr/r4hr_introduccion_dplyr/main/Datos/encuesta_sueldos.csv", 
+                       delim = ",")
+```
+]
+
+---
+## Explorando los datos
+
+Vamos a explorar algunas características del dataset:
+
+
+```r
+glimpse(encuesta)
+```
+
+```
+## Rows: 464
+## Columns: 15
+## $ genero           &lt;chr&gt; "Femenino", "Femenino", "Masculino", "Femenino", "Fem~
+## $ edad             &lt;dbl&gt; 31, 28, 25, 33, 24, 30, 39, 23, 29, 30, 32, 28, 25, 2~
+## $ universidad      &lt;chr&gt; "Universidad Privada", "Universidad Privada", "Univer~
+## $ rubro            &lt;chr&gt; "Función pública", "Alimentación; bebidas; tabaco", "~
+## $ empleados        &lt;dbl&gt; 400, 150, 186, 4, 80, 135, 15, 10000, 300, 65, 10000,~
+## $ origen_capital   &lt;chr&gt; "Nacional", "Nacional", "Nacional", "Nacional", "Naci~
+## $ empleados_rh     &lt;dbl&gt; 6, 3, 2, 1, 1, 3, 1, 40, 2, 3, 10, 15, 2, 2, 2, 2, 6,~
+## $ puesto           &lt;chr&gt; "Administrativo", "Administrativo", "Administrativo",~
+## $ personas_a_cargo &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0,~
+## $ anios_rh         &lt;dbl&gt; 8, 9, 2, 3, 1, 6, 6, 3, 5, 6, 5, 8, 2, 1, 1, 4, 5, 18~
+## $ sueldo_bruto     &lt;dbl&gt; 41000.00, 40000.00, 43954.43, 40000.00, 15000.00, 570~
+## $ aumento          &lt;dbl&gt; 0.0, 10.0, 0.0, 20.0, 0.0, 0.0, 49.0, 0.0, 0.0, 30.0,~
+## $ erp              &lt;chr&gt; "No tenemos sistema de gestión", "Tango", "Tango", "E~
+## $ satisfaccion     &lt;dbl&gt; 2, 4, 3, 3, 2, 3, 4, 3, NA, NA, 4, 3, 3, 4, 4, 1, 3, ~
+## $ buscando_trabajo &lt;chr&gt; "No,  pero escucho ofertas", "No,  pero escucho ofert~
+```
+
+---
+
+
+class: inverse, middle
+background-image: url("Archivos/dplyr.png")
+background-size: cover
+
+---
+# Los "verbos" en dplyr
+
+Una de las razones por las cuales tidyverse se hizo tan popular es que la lógica de las funciones imita el razonamiento que haríamos verbalmente.
+
+--
+
+Por ejemplo, ¿cómo harían para calcular el sueldo promedio por puesto y ordenar los resultados de mayor a menor?
+
+--
+
+
+```r
+encuesta %&gt;% 
+  select(puesto, sueldo_bruto) %&gt;% # Selecciona las columnas
+  group_by(puesto) %&gt;%     # Agrupa por la variable puesto
+  summarise(sueldo_promedio = mean(sueldo_bruto)) %&gt;% # Crea una variable con el sueldo promedio
+  arrange(-sueldo_promedio) # Ordena descendentemente los resultados por la variable que pasemos.
+```
+
+```
+## # A tibble: 7 x 2
+##   puesto         sueldo_promedio
+##   &lt;chr&gt;                    &lt;dbl&gt;
+## 1 Gerente                230972.
+## 2 Director               210788.
+## 3 Jefe                   110486.
+## 4 HRBP                    93805.
+## 5 Responsable             75024.
+## 6 Analista                68061.
+## 7 Administrativo          44154.
+```
+
+---
+# dplyr: El "pipe"
+
+¿Vieron este símbolo `%&gt;%` en la slide anterior? En la jerga lo conocemos como *"pipe"* (atajo de teclado Ctrl + Mayús + M). Lo que nos permite este *"tubo"* es ordenar el código en secuencias, haciéndolo más comprensible a la lectura.
+
+Una de las ventajas del *pipe* es que no necesitamos invocar al dataframe en cada función que encadenamos en el pipe.
+
+.center[
+&lt;img src="Archivos/dplyr_funciones.png" width="57%"/&gt;
+]
+
+---
+## dplyr: Secuencias
+
+Por ejemplo, si quiero ver los sueldos brutos por puesto de las personas que no tienen gente a cargo ordenados por el puesto. Los pasos son:
+
+1. Elegir las variables `puesto`, `sueldo_bruto`, `personas_a_cargo`.
+2. Filtrar de la variable `personas_a_cargo` los casos que no tienen gente a cargo.
+3. Ordenar los resultados por puesto.
+
+&gt; Acá estoy usando la función `head()` para que quede prolijo en la presentación. Ustedes no la usen y recuerden sacar el último paréntesis
+
+
+```r
+head(arrange(filter(select(encuesta, puesto, sueldo_bruto, personas_a_cargo), personas_a_cargo &gt; 0), puesto))
+```
+
+```
+## # A tibble: 6 x 3
+##   puesto         sueldo_bruto personas_a_cargo
+##   &lt;chr&gt;                 &lt;dbl&gt;            &lt;dbl&gt;
+## 1 Administrativo        94050                4
+## 2 Analista             650000               70
+## 3 Analista              37000               44
+## 4 Analista              65500                2
+## 5 Analista              45500              120
+## 6 Analista             134000                2
+```
+
+---
+
+## dplyr: Secuencias
+
+Esto mismo usando el pipe de dplyr lo hacemos así:
+
+```r
+*encuesta %&gt;%
+* select(puesto, sueldo_bruto, personas_a_cargo) %&gt;%
+* filter(personas_a_cargo&gt;0) %&gt;%
+* arrange(puesto) %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 3
+##   puesto         sueldo_bruto personas_a_cargo
+##   &lt;chr&gt;                 &lt;dbl&gt;            &lt;dbl&gt;
+## 1 Administrativo        94050                4
+## 2 Analista             650000               70
+## 3 Analista              37000               44
+## 4 Analista              65500                2
+## 5 Analista              45500              120
+## 6 Analista             134000                2
+```
+
+
+---
+# ¿Cuál es más fácil de entender?
+&lt;br&gt;
+
+### Código sin el *pipe*
+
+
+```r
+arrange(filter(select(encuesta, puesto, sueldo_bruto, personas_a_cargo), personas_a_cargo &gt; 0), puesto)
+```
+
+
+### Código con el *pipe*
+
+
+```r
+encuesta %&gt;%
+  select(puesto, sueldo_bruto, personas_a_cargo) %&gt;%
+  filter(personas_a_cargo&gt;0) %&gt;%
+  arrange(puesto)
+```
+
+
+---
+# Las funciones de dplyr
+
+En esta presentación vamos a repasar los siguientes *"verbos"* o funciones:
+
+* **select**: Para elegir las variables para trabajar.
+* **filter**: Filtra a las variables por alguna condición que le pasemos.
+* **group_by**: Define las variables por las cuales vamos a agrupar los cálculos.
+* **summarise**: Permite crear cálculos de resumen estadístico.
+* **mutate**: Permite crear variables nuevas en función de variables existentes, o bien sobrescribir una columna para modificar sus características.
+
+
+Hay muchas funciones más, que pueden explorar en el *cheatsheet*.
+---
+
+.left-column[
+## select
+### filter
+### group_by
+### summarise
+### mutate
+]
+
+.right-column[
+La función `select()` sirve para elegir las columnas (variables) con las que queremos trabajar. También nos permite traer las columnas en el orden que las necesitemos.
+
+
+```r
+encuesta %&gt;% 
+* select(satisfaccion, sueldo_bruto) %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 2
+##   satisfaccion sueldo_bruto
+##          &lt;dbl&gt;        &lt;dbl&gt;
+## 1            2       41000 
+## 2            4       40000 
+## 3            3       43954.
+## 4            3       40000 
+## 5            2       15000 
+## 6            3       57000
+```
+]
+
+---
+## select()
+
+`select()` tiene algunas variantes interesantes (y en general aplican para casi todas las funciones de dplyr).
+
+Supongamos que quiera seleccionar todas las columnas numéricas nada más:
+
+
+
+```r
+encuesta %&gt;%
+* select_if(is.numeric) %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 8
+##    edad empleados empleados_rh personas_a_cargo anios_rh sueldo_bruto aumento
+##   &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;            &lt;dbl&gt;    &lt;dbl&gt;        &lt;dbl&gt;   &lt;dbl&gt;
+## 1    31       400            6                0        8       41000        0
+## 2    28       150            3                0        9       40000       10
+## 3    25       186            2                0        2       43954.       0
+## 4    33         4            1                0        3       40000       20
+## 5    24        80            1                0        1       15000        0
+## 6    30       135            3                0        6       57000        0
+## # ... with 1 more variable: satisfaccion &lt;dbl&gt;
+```
+
+---
+
+.left-column[
+### select
+## filter
+### group_by
+### summarise
+### mutate
+]
+
+.right-column[
+&lt;img src="https://media1.tenor.com/images/a299701f92c2b143575c9d6bd3d73bae/tenor.gif?itemid=14764954" /&gt;
+]
+
+---
+## filter
+
+`filter()` nos permite obtener las filas (observaciones) que cumplen con las condiciones que necesitamos.
+
+Ej.: Respuestas de Universidades Públicas
+
+
+```r
+encuesta %&gt;%
+  # Prestar atención al doble signo igual "=="
+* filter(universidad == "Universidad Pública") %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 15
+##   genero   edad universidad rubro   empleados origen_capital empleados_rh puesto
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt; 
+## 1 Femeni~    25 Universida~ Transp~     22000 Nacional                  2 Admin~
+## 2 Femeni~    24 Universida~ Comerc~        94 Nacional                  2 Admin~
+## 3 Femeni~    24 Universida~ Comerc~        94 Nacional                  2 Admin~
+## 4 Femeni~    33 Universida~ Servic~       117 Nacional                  2 Admin~
+## 5 Femeni~    29 Universida~ Petról~       225 Multinacional             6 Admin~
+## 6 Mascul~    46 Universida~ Constr~       250 Nacional                  2 Admin~
+## # ... with 7 more variables: personas_a_cargo &lt;dbl&gt;, anios_rh &lt;dbl&gt;,
+## #   sueldo_bruto &lt;dbl&gt;, aumento &lt;dbl&gt;, erp &lt;chr&gt;, satisfaccion &lt;dbl&gt;,
+## #   buscando_trabajo &lt;chr&gt;
+```
+
+---
+## filter
+
+`filter()` nos permite obtener las filas (observaciones) que cumplen con las condiciones que necesitamos.
+
+Ej.: Respuestas de trabajadores privados (filtrar todo lo que no sea `Función pública`)
+
+```r
+encuesta %&gt;%
+  # Prestar atención al signo "No igual a "!="
+* filter(universidad != "Función pública") %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 15
+##   genero   edad universidad  rubro  empleados origen_capital empleados_rh puesto
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;      &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt; 
+## 1 Femeni~    31 Universidad~ Funci~       400 Nacional                  6 Admin~
+## 2 Femeni~    28 Universidad~ Alime~       150 Nacional                  3 Admin~
+## 3 Mascul~    25 Universidad~ Miner~       186 Nacional                  2 Admin~
+## 4 Femeni~    33 Universidad~ Servi~         4 Nacional                  1 Admin~
+## 5 Femeni~    24 Universidad~ Const~        80 Nacional                  1 Admin~
+## 6 Femeni~    30 Universidad~ Servi~       135 Nacional                  3 Admin~
+## # ... with 7 more variables: personas_a_cargo &lt;dbl&gt;, anios_rh &lt;dbl&gt;,
+## #   sueldo_bruto &lt;dbl&gt;, aumento &lt;dbl&gt;, erp &lt;chr&gt;, satisfaccion &lt;dbl&gt;,
+## #   buscando_trabajo &lt;chr&gt;
+```
+
+---
+## filter: Operadores lógicos
+
+Estas son los operadores lógicos que nos van a ayudar con la función filter.
+
+.center[&lt;img src="Archivos/operadores.png" /&gt;]
+---
+## filter()
+
+`filter()` nos permite obtener las filas (observaciones) que cumplen con las condiciones que necesitamos.
+
+Ej.: Listado de respuestas de Universidad Privada y de empresas con más de 700 empleados.
+
+
+```r
+# Filtramos los empleados que son de Universidad Privada y de empresas con más de 700 empleados.
+encuesta %&gt;%
+* filter(universidad == "Universidad Privada" &amp;  empleados &gt; 700) %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 15
+##   genero   edad universidad rubro   empleados origen_capital empleados_rh puesto
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt; 
+## 1 Femeni~    23 Universida~ Alimen~     10000 Nacional                 40 Admin~
+## 2 Femeni~    32 Universida~ Servic~     10000 Multinacional            10 Admin~
+## 3 Femeni~    35 Universida~ Comerc~      1433 Nacional                 10 Anali~
+## 4 Femeni~    41 Universida~ Transp~      1000 Nacional                  8 Anali~
+## 5 Femeni~    27 Universida~ Produc~      5350 Multinacional           160 Anali~
+## 6 Femeni~    31 Universida~ Petról~     60000 Multinacional          2500 Anali~
+## # ... with 7 more variables: personas_a_cargo &lt;dbl&gt;, anios_rh &lt;dbl&gt;,
+## #   sueldo_bruto &lt;dbl&gt;, aumento &lt;dbl&gt;, erp &lt;chr&gt;, satisfaccion &lt;dbl&gt;,
+## #   buscando_trabajo &lt;chr&gt;
+```
+
+---
+## filter: Operadores lógicos
+
+.pull-left[
+
+Veamos la distribución de los sueldos con un histograma
+
+
+```r
+library(ggplot2) 
+
+ggplot(encuesta, aes(x = sueldo_bruto)) + # Defino fuente de datos y variable a graficar
+  geom_histogram() +                  # Tipo de gráfico
+  ggtitle("Distribución de sueldos brutos") # Agrego título al gráfico
+```
+
+
+]
+
+.pull-right[
+😱
+
+&lt;img src="index_files/figure-html/unnamed-chunk-8-1.png" width="504" /&gt;
+
+]
+
+---
+## filter: Operadores lógicos
+
+¿Qué salió mal? Tenemos valores extremos que pueden ser válidos, pero que no son representativos. Exploremos la variable:
+
+
+```r
+summary(encuesta$sueldo_bruto)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       2   53837   74000   94370  105250 2140000
+```
+
+--
+Vemos que hay sueldos muy altos, que pueden ser válidos pero que son atípicos. Y también encontramos sueldos muy bajos.
+
+---
+## filter: Operadores lógicos
+
+.pull-left[
+Podemos filtrar un rango de una variable numérica de la siguiente manera combinando la función `between()`:
+
+
+
+```r
+# Creo un objeto nuevo
+encuesta_limpia &lt;- encuesta %&gt;% 
+  filter(between(sueldo_bruto,   # Variable a filtrar 
+                 50000,          # Valor mínimo
+                 200000))        # Valor máximo
+
+# Vuelvo a graficar
+ggplot(encuesta_limpia, aes(x = sueldo_bruto)) +
+  geom_histogram() +
+  ggtitle("Distribución de sueldos brutos")
+```
+
+
+]
+
+.pull-right[
+👍
+
+&lt;img src="index_files/figure-html/unnamed-chunk-10-1.png" width="504" /&gt;
+]
+---
+
+## filter()
+
+`filter()` nos permite obtener las filas (observaciones) que cumplen con las condiciones que necesitamos.
+
+Ej.: Empleados de dos rubros diferentes
+
+```r
+encuesta %&gt;%
+* filter(rubro == "Comercio"| rubro == "Servicios de salud") %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 15
+##   genero   edad universidad  rubro  empleados origen_capital empleados_rh puesto
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;      &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt; 
+## 1 Femeni~    30 Universidad~ Servi~       135 Nacional                  3 Admin~
+## 2 Femeni~    30 Universidad~ Servi~        65 Nacional                  3 Admin~
+## 3 Femeni~    24 Universidad~ Comer~        94 Nacional                  2 Admin~
+## 4 Femeni~    24 Universidad~ Comer~        94 Nacional                  2 Admin~
+## 5 Femeni~    33 Universidad~ Servi~       117 Nacional                  2 Admin~
+## 6 Femeni~    24 Universidad~ Comer~        94 Nacional                  2 Admin~
+## # ... with 7 more variables: personas_a_cargo &lt;dbl&gt;, anios_rh &lt;dbl&gt;,
+## #   sueldo_bruto &lt;dbl&gt;, aumento &lt;dbl&gt;, erp &lt;chr&gt;, satisfaccion &lt;dbl&gt;,
+## #   buscando_trabajo &lt;chr&gt;
+```
+ 
+---
+## filter()
+Una alternativa es usar un vector de selección
+
+```r
+encuesta %&gt;%
+* filter(rubro %in% c("Comercio", "Servicios de salud"))
+```
+
+---
+.left-column[
+### select
+### filter
+## group_by
+## summarise
+### mutate
+]
+.right-column[
+`group_by()` es una función para agrupar las variables en función de los valores de una o varias columnas. 
+
+Por ejemplo si quiero ver los sueldos promedio por puesto, tengo que agrupar por puesto, y luego calculo el promedio.
+
+Para calcular el promedio voy a necesitar la función `summarise()`, que crea nuevas columnas con medidas de resumen estadístico.
+]
+---
+## group_by y summarise
+
+
+```r
+encuesta %&gt;%
+  select(puesto, sueldo_bruto) %&gt;%
+  # Agrupo por puesto
+* group_by(puesto) %&gt;%
+  #Calculo el sueldo promedio
+* summarise(sueldo_promedio = mean(sueldo_bruto))
+```
+
+```
+## # A tibble: 7 x 2
+##   puesto         sueldo_promedio
+## * &lt;chr&gt;                    &lt;dbl&gt;
+## 1 Administrativo          44154.
+## 2 Analista                68061.
+## 3 Director               210788.
+## 4 Gerente                230972.
+## 5 HRBP                    93805.
+## 6 Jefe                   110486.
+## 7 Responsable             75024.
+```
+]
+---
+
+.left-column[
+### select
+### filter
+### group_by
+### summarise
+## mutate
+]
+
+.right-column[
+`mutate()` tiene dos usos principales.
+
+1. Crear nuevas columnas en base a las columnas que ya existen en el dataset. Por ejemplo, para calcular un **sueldo anual** de una columna de **sueldo mensual**.
+
+2. Para modificar las características de una variable. Por ejemplo, para cambiar el tipo de variable, como pasar una variable numérica a tipo `factor` o definir el orden de una variable.
+
+]
+
+---
+## mutate: Ejemplos
+
+Calcular el sueldo anual en base a la columna sueldo bruto 
+
+&gt; En Argentina tenemos un bono anual llamado *aguinaldo*, que equivale a un sueldo más y se paga dos veces en el año.
+
+
+```r
+encuesta %&gt;%
+  select(puesto, sueldo_bruto) %&gt;%
+* mutate(sueldo_bruto_anual = sueldo_bruto * 13) %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 x 3
+##   puesto         sueldo_bruto sueldo_bruto_anual
+##   &lt;chr&gt;                 &lt;dbl&gt;              &lt;dbl&gt;
+## 1 Administrativo       41000             533000 
+## 2 Administrativo       40000             520000 
+## 3 Administrativo       43954.            571408.
+## 4 Administrativo       40000             520000 
+## 5 Administrativo       15000             195000 
+## 6 Administrativo       57000             741000
+```
+---
+## mutate: Ejemplos
+
+Con mutate podemos cambiar las características de algunas variables. Por ejemplo, la variable `puesto` es de tipo `character` o nominal, es decir que no nos permite ordenar sus resultados.
+
+
+```r
+class(encuesta$puesto)
+```
+
+```
+## [1] "character"
+```
+
+Si convertimos esta variable en tipo `factor` podremos definir el orden que nos sirva para representar la jerarquía.
+
+---
+## mutate: Ejemplos
+
+
+```r
+encuesta %&gt;% select(puesto, sueldo_bruto) %&gt;% 
+* mutate(puesto = factor(puesto, levels = c("Director", "Gerente", "Jefe", "Responsable",
+*                                           "HRBP", "Analista", "Administrativo"))) %&gt;%
+  group_by(puesto) %&gt;% summarise(sueldo_promedio = mean(sueldo_bruto))
+```
+
+```
+## # A tibble: 7 x 2
+##   puesto         sueldo_promedio
+## * &lt;fct&gt;                    &lt;dbl&gt;
+## 1 Director               210788.
+## 2 Gerente                230972.
+## 3 Jefe                   110486.
+## 4 Responsable             75024.
+## 5 HRBP                    93805.
+## 6 Analista                68061.
+## 7 Administrativo          44154.
+```
+
+---
+## mutate + case_when
+
+.left-column[
+La función `case_when` la podemos usar dentro de mutate para crear categorías a partir de variables numéricas. 
+
+Usemos esto para crear rangos de empleados, y calcular el sueldo promedio después.
+]
+
+.right-column[
+
+
+```r
+encuesta &lt;- encuesta %&gt;%  
+* mutate(cantidad_empleados = case_when(
+*   empleados &lt;= 100 ~ "Hasta 100",
+*   empleados &lt;= 500 ~ "Hasta 500",
+*   empleados &lt;= 1000 ~ "Hasta 1000",
+*   empleados &lt;= 5000 ~ "Hasta 5000",
+*   empleados = TRUE ~ "Más de 5000"
+  )) 
+
+encuesta %&gt;% 
+  group_by(cantidad_empleados) %&gt;% 
+  summarise(sueldo_promedio = mean(sueldo_bruto))
+```
+
+```
+## # A tibble: 5 x 2
+##   cantidad_empleados sueldo_promedio
+## * &lt;chr&gt;                        &lt;dbl&gt;
+## 1 Hasta 100                   84486.
+## 2 Hasta 1000                  88247.
+## 3 Hasta 500                  103045.
+## 4 Hasta 5000                  94464.
+## 5 Más de 5000                 92847.
+```
+]
+
+
+---
+class: inverse, middle
+
+# Secuencia de análisis
+
+## 1. Agrupar los grupos que quiero comparar (group_by)
+## 2. Calcular medidas de resumen estadístico (summarise, mutate)
+## 3. Graficar los resultados (ggplot)
+
+---
+# Ejemplo de Análisis
+Realicemos un análisis de los sueldos brutos por cantidad de empleados, según el origen del capital.
+
+Pasos:
+1. Creo un objeto nuevo.
+2. Agrupar los resultados por `origen_capital` y la columna nueva de `cantidad_empleados`.
+3. Calculo el sueldo promedio con `summarise()`
+4. Grafico los resultados.
+
+---
+### Manos a la obra!
+
+
+```r
+# Creo un objeto nuevo
+analisis_sueldos &lt;- encuesta %&gt;% 
+# Agrupo por origen_capital y cantidad_empleados
+  group_by(origen_capital, cantidad_empleados) %&gt;% 
+  # Calculo el sueldo promedio
+  summarise(sueldo_promedio = mean(sueldo_bruto))
+
+# Veo los resultados
+analisis_sueldos
+```
+
+```
+## # A tibble: 10 x 3
+## # Groups:   origen_capital [2]
+##    origen_capital cantidad_empleados sueldo_promedio
+##    &lt;chr&gt;          &lt;chr&gt;                        &lt;dbl&gt;
+##  1 Multinacional  Hasta 100                  179451.
+##  2 Multinacional  Hasta 1000                 104350 
+##  3 Multinacional  Hasta 500                  130732.
+##  4 Multinacional  Hasta 5000                 102300.
+##  5 Multinacional  Más de 5000                 96458.
+##  6 Nacional       Hasta 100                   67464.
+##  7 Nacional       Hasta 1000                  84566.
+##  8 Nacional       Hasta 500                   91306.
+##  9 Nacional       Hasta 5000                  88162.
+## 10 Nacional       Más de 5000                 90714.
+```
+
+---
+## Gráfico básico
+.pull-left[
+
+```r
+ggplot(analisis_sueldos, aes(x = cantidad_empleados,
+                             y = sueldo_promedio,
+                             fill = origen_capital)) + # Color de las barras
+  geom_col(position = "dodge") # Posiciona las barras una al lado de la otra
+```
+]
+
+.pull-right[
+&lt;img src="index_files/figure-html/unnamed-chunk-18-1.png" width="504" /&gt;
+
+]
+
+---
+# Gráfico copado
+.pull-left[
+
+```r
+library(scales) # Modificar formato escalas gráfico
+library(ggthemes) # Añade más opciones de formato a los gráficos
+
+ggplot(analisis_sueldos, aes(x = cantidad_empleados,
+                             y = sueldo_promedio,
+                             fill = origen_capital)) + # Color de las barras
+  geom_col(position = "dodge") +
+  scale_fill_economist() + # Cambia paleta de colores de las barras.
+  # Añade separador de miles al eje y
+  scale_y_continuous(labels = comma_format(big.mark = ".", 
+                                           decimal.mark = ",")) +
+  labs(title = "Sueldo Promedio por Origen de Capital \n y Tamaño de Empresa", #Título
+       subtitle = "En Pesos Argentinos", #Subtítulo
+       x = "", y ="",                    # Elimino etiquetas de eje
+       fill = "Origen de Capital",       # Cambio nombre colores
+       caption = "HR Bootcamp - Humanos Reales \n Fuente: Encuesta KIWI de Sueldos de RH") + # Agrega nota al pie
+  theme_economist() # Modifica el estilo del gráfico
+```
+]
+
+.pull-right[
+&lt;img src="index_files/figure-html/unnamed-chunk-19-1.png" width="504" /&gt;
+
+]
+
+---
+# Fuentes adicionales
+
+* [**Ciencia de Datos para Gente Sociable**](https://bitsandbricks.github.io/ciencia_de_datos_gente_sociable/) de Antonio Vazquez Brust
+
+* [**R para Ciencia de Datos**](https://es.r4ds.hadley.nz/) de Hadley Wickham y Garrett Grolemund
+
+* [**Canal de Youtube Club de R para RRHH**](https://youtube.com/playlist?list=PLZuVytUJrxQlcqu6l-P3ou4vV2mRJU2Ka)
+
+---
+
+.pull-left[
+.center[# Muchas gracias!]
+&lt;img src="https://media.giphy.com/media/d68IdpvmAHohx5NMEV/giphy.gif" /&gt;
+]
+
+.pull-right[
+Si te gustó esta sesión me pueden encontrar en:
+
+&lt;svg style="height:0.8em;top:.04em;position:relative;fill:blue;" viewBox="0 0 448 512"&gt;&lt;path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/&gt;&lt;/svg&gt; [Sergio Garcia Mora](https://www.linkedin.com/in/sergiogarciamora/)
+&lt;svg style="height:0.8em;top:.04em;position:relative;fill:blue;" viewBox="0 0 512 512"&gt;&lt;path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/&gt;&lt;/svg&gt; [@sergiogarciamor](https://twitter.com/sergiogarciamor)
+&lt;svg style="height:0.8em;top:.04em;position:relative;fill:blue;" viewBox="0 0 512 512"&gt;&lt;path d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"/&gt;&lt;/svg&gt; [Telegram](https://t.me/SergioGarciaMora)
+&lt;svg style="height:0.8em;top:.04em;position:relative;fill:blue;" viewBox="0 0 512 512"&gt;&lt;path d="M502.3 190.8c3.9-3.1 9.7-.2 9.7 4.7V400c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V195.6c0-5 5.7-7.8 9.7-4.7 22.4 17.4 52.1 39.5 154.1 113.6 21.1 15.4 56.7 47.8 92.2 47.6 35.7.3 72-32.8 92.3-47.6 102-74.1 131.6-96.3 154-113.7zM256 320c23.2.4 56.6-29.2 73.4-41.4 132.7-96.3 142.8-104.7 173.4-128.7 5.8-4.5 9.2-11.5 9.2-18.9v-19c0-26.5-21.5-48-48-48H48C21.5 64 0 85.5 0 112v19c0 7.4 3.4 14.3 9.2 18.9 30.6 23.9 40.7 32.4 173.4 128.7 16.8 12.2 50.2 41.8 73.4 41.4z"/&gt;&lt;/svg&gt; [sergio@d4hr.com](mailto:sergio@d4hr.com)
+
+Recuerden compartir sus capturas de pantalla y sensaciones con los hashtags:
+
+* #### #R4HR
+* #### #data4hr
+* #### #PeopleAnalytics
+* #### #RStats_ES
+* #### #BetterWithData
+]
+---
+background-color: #F0B27A
+class: inverse, center, middle
+
+## Seguir al Club de R para RRHH en nuestras redes
+
+### [link.tree/r4hrclub](https://www.linktr.ee/r4hrclub) 📡
+&lt;img src="https://media.giphy.com/media/93fsZ7rI488L908x0T/giphy.gif" width="30%" /&gt;
+
+---
+## Paquetes utilizados
+
+* **dplyr**: Hadley Wickham, Romain François, Lionel Henry and Kirill Müller (2021). dplyr: A Grammar of Data Manipulation. R package version 1.0.4.
+  https://CRAN.R-project.org/package=dplyr
+* **xaringan**: Yihui Xie (2020). xaringan: Presentation Ninja. R package version 0.19.
+  https://CRAN.R-project.org/package=xaringan
+* **ggplot2**: H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
+* **scales**: Hadley Wickham and Dana Seidel (2020). scales: Scale Functions for
+  Visualization. R package version 1.1.1. https://CRAN.R-project.org/package=scales
+* **ggthemes**: Jeffrey B. Arnold (2021). ggthemes: Extra Themes, Scales and Geoms for
+  'ggplot2'. R package version 4.2.4. https://CRAN.R-project.org/package=ggthemes
+* **readr**: Hadley Wickham and Jim Hester (2020). readr: Read Rectangular Text Data. R
+  package version 1.4.0. https://CRAN.R-project.org/package=readr
+  
+---
+background-color: #BEDAF7
+class: inverse, center, bottom
+
+# &lt;svg style="height:0.8em;top:.04em;position:relative;fill:black;" viewBox="0 0 480 512"&gt;&lt;path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/&gt;&lt;/svg&gt;
+[Repo](https://github.com/chechoid/humanosReales)
+
+
+Presentación realizada con el paquete [Xaringan](https://github.com/yihui/xaringan) desarrollado por Yihui Xie.
+
+Gracias a [Patricia Loto](https://twitter.com/patriloto) por compartir el [tutorial](https://twitter.com/patriloto/status/1260822644590608391?s=20)
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "191:100",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
