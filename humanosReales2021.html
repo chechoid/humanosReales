@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>People Analytics con R</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# People Analytics con R
+## limpiando datos con dplyr
+### <svg viewBox="0 0 448 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg">
+<path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"></path>
+</svg>
+<a href="https://www.linkedin.com/in/sergiogarciamora/">Sergio Garcia Mora</a><br><br><svg viewBox="0 0 496 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"> <path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm117.8-146.4c-10.2-8.5-25.3-7.1-33.8 3.1-20.8 25-51.5 39.4-84 39.4s-63.2-14.3-84-39.4c-8.5-10.2-23.7-11.5-33.8-3.1-10.2 8.5-11.5 23.6-3.1 33.8 30 36 74.1 56.6 120.9 56.6s90.9-20.6 120.9-56.6c8.5-10.2 7.1-25.3-3.1-33.8zM168 240c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-60c-25.7 0-55.9 16.9-59.9 42.1-1.7 11.2 11.5 18.2 19.8 10.8l9.5-8.5c14.8-13.2 46.2-13.2 61 0l9.5 8.5c8.5 7.4 21.6.3 19.8-10.8-3.8-25.2-34-42.1-59.7-42.1z"></path></svg> <a href="https://data-4hr.com">Data 4HR</a>
+### HR Bootcamp - Humanos Reales
+
+---
+
+
+
+
+
+
+# Sergio García Mora
+
+.left-column[
+&lt;img src="Archivos/eu.jpg" /&gt;
+]
+
+.right-column[
+* ### 🤓 HR Nerd
+* 💪 Lic. en Relaciones del Trabajo con formación en Data Mining
+* ✈️ Fundador de [Data 4HR](https://data-4hr.com/)
+* 💹 SME People Analytics en [Data IQ](https://dataiq.com.ar/)
+* 👨‍🏫 Profesor de People Analytics en ITBA
+* 🍷 Fundador del [Club de R para RRHH](https://r4hr.club)
+* 👑 Meme Manager en varias comunidades
+
+]
+---
+
+.left-column[
+En alguna época solía bromear con que era parecido a [Nicolás del Caño](https://www.xn--nicolasdelcao-tkb.com.ar/)
+&lt;br&gt;
+&lt;img src="Archivos/knn_checho.png" /&gt;
+]
+
+--
+
+.right-column[
+Pero los datos dicen otra cosa...
+
+```
+##  [1] "Marca temporal"                                                
+##  [2] "Facha de Keanu"                                                
+##  [3] "Copadez de Keanu"                                              
+##  [4] "Facha de Russell"                                              
+##  [5] "Copadez de Russell"                                            
+##  [6] "Facha de Nico"                                                 
+##  [7] "Copadez de Nico"                                               
+##  [8] "Facha de Roberto"                                              
+##  [9] "Copadez de Roberto"                                            
+## [10] "Facha de Jeff"                                                 
+## [11] "Copadez de Jeff"                                               
+## [12] "Facha de Brad"                                                 
+## [13] "Copadez de Brad"                                               
+## [14] "Facha del Mono"                                                
+## [15] "Copadez del Mono"                                              
+## [16] "Facha de Sergio"                                               
+## [17] "Copadez de Sergio"                                             
+## [18] "Facha de Ricky"                                                
+## [19] "Copadez de Ricky"                                              
+## [20] "Facha de Ben"                                                  
+## [21] "Copadez de Ben"                                                
+## [22] "Facha de Javier"                                               
+## [23] "Copadez de Javier"                                             
+## [24] "Poné lo que quieras... parecidos, chistes, comentarios, etc..."
+## [25] "id"
+```
+
+```
+## # A tibble: 1,452 x 3
+##       id personaje          puntaje
+##    &lt;int&gt; &lt;chr&gt;                &lt;dbl&gt;
+##  1     1 Facha de Keanu          10
+##  2     1 Copadez de Keanu        10
+##  3     1 Facha de Russell         7
+##  4     1 Copadez de Russell      10
+##  5     1 Facha de Nico            1
+##  6     1 Copadez de Nico          1
+##  7     1 Facha de Roberto         1
+##  8     1 Copadez de Roberto       1
+##  9     1 Facha de Jeff            5
+## 10     1 Copadez de Jeff          5
+## # ... with 1,442 more rows
+```
+
+&lt;img src="humanosReales2021_files/figure-html/knn-1.png" width="504" /&gt;
+
+```
+## # A tibble: 1,452 x 4
+##       id metrica persona puntaje
+##    &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;
+##  1     1 Facha   Keanu        10
+##  2     1 Copadez Keanu        10
+##  3     1 Facha   Russell       7
+##  4     1 Copadez Russell      10
+##  5     1 Facha   Nico          1
+##  6     1 Copadez Nico          1
+##  7     1 Facha   Roberto       1
+##  8     1 Copadez Roberto       1
+##  9     1 Facha   Jeff          5
+## 10     1 Copadez Jeff          5
+## # ... with 1,442 more rows
+```
+
+```
+## # A tibble: 726 x 4
+##       id persona Facha Copadez
+##    &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+##  1     1 Keanu      10      10
+##  2     1 Russell     7      10
+##  3     1 Nico        1       1
+##  4     1 Roberto     1       1
+##  5     1 Jeff        5       5
+##  6     1 Brad       10      10
+##  7     1 Mono       10      10
+##  8     1 Sergio     10      10
+##  9     1 Ricky      10      10
+## 10     1 Ben         8       8
+## # ... with 716 more rows
+```
+
+&lt;img src="humanosReales2021_files/figure-html/knn-2.png" width="504" /&gt;
+
+```
+## # A tibble: 11 x 4
+##    persona facha_promedio copadez_promedio foto           
+##    &lt;chr&gt;            &lt;dbl&gt;            &lt;dbl&gt; &lt;chr&gt;          
+##  1 Ben               8.23             6.47 knn/Ben.png    
+##  2 Brad              8.52             7.55 knn/Brad.png   
+##  3 Javier            6.89             6.56 knn/Javier.png 
+##  4 Jeff              5.06             6.45 knn/jeff.png   
+##  5 Keanu             7.77             8.74 knn/keanu.png  
+##  6 Mono              3.30             6.30 knn/mono.png   
+##  7 Nico              4.95             4.77 knn/nico.png   
+##  8 Ricky             4.68             6.44 knn/ricky.png  
+##  9 Roberto           2.52             2.92 knn/roberto.png
+## 10 Russell           5.56             6.59 knn/russell.png
+## 11 Sergio            7.65             9.39 knn/sergio.png
+```
+
+&lt;img src="humanosReales2021_files/figure-html/knn-3.png" width="504" /&gt;
+
+]
+---
+class: inverse
+# ¿Qué es R y para qué sirve en RRHH?
+
+
+---
+# ¿Qué es R?
+
+**R** es un lenguaje de código abierto, que se hizo conocido inicialmente como un lenguaje de análisis estadístico.
+
+--
+
+Hoy en día, y gracias a la comunidad de desarrolladores quienes expandieron sus capacidades, se puede usar R para muchas cosas más.
+
+--
+Los principales usuarios de R vienen de muchas profesiones que mayormente no está relacionada con las Ciencias de la Computación, de ahí que se prioriza la usabilidad del código, la reproducibilidad de los proyectos, a veces en desmedro de la performance, pero con una diversidad de paquetes y aplicaciones que hacen más simple la curva de aprendizaje.
+
+--
+
+En R podés trabajar con cualquier tipo de datos, y hacer todo tipo de análisis que se te ocurra.
+
+---
+# Análisis de Clusters
+
+.left-column[
+Los análisis de clusters son útiles para encontrar grupos (clusters) entre los datos.
+&lt;img src="humanosReales2021_files/figure-html/cluster1-1.png" width="504" /&gt;
+
+]
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "191:100",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

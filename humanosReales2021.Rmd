@@ -1,0 +1,212 @@
+---
+title: "People Analytics con R"
+subtitle: "limpiando datos con dplyr"
+institute: "HR Bootcamp - Humanos Reales"
+author: '`r icons::fontawesome("linkedin")` [Sergio Garcia Mora](https://www.linkedin.com/in/sergiogarciamora/)<br><br>`r icons::fontawesome("smile-wink")` [Data 4HR](https://data-4hr.com)'
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: xaringan-themer.css
+    nature:
+      ratio: 191:100
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(fig.retina = 3, warning = FALSE, message = FALSE)
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_duo_accent(
+  primary_color = "#03162C",
+  secondary_color = "#0256B6",
+  inverse_header_color = "#FFFFFF",
+  header_font_google = google_font("Nunito", "400"),
+  text_font_google   = google_font("Roboto", "280", "280i"),
+  code_font_google   = google_font("Fira Mono")
+)
+```
+
+# Sergio García Mora
+
+.left-column[
+<img src="Archivos/eu.jpg" />
+]
+
+.right-column[
+* ### `r emo::ji("geek")` HR Nerd
+* `r emo::ji("biceps")` Lic. en Relaciones del Trabajo con formación en Data Mining
+* `r emo::ji("airplane")` Fundador de [Data 4HR](https://data-4hr.com/)
+* `r emo::ji("chart")` SME People Analytics en [Data IQ](https://dataiq.com.ar/)
+* `r emo::ji("teacher")` Profesor de People Analytics en ITBA
+* `r emo::ji("wine")` Fundador del [Club de R para RRHH](https://r4hr.club)
+* `r emo::ji("king")` Meme Manager en varias comunidades
+
+]
+---
+
+.left-column[
+En alguna época solía bromear con que era parecido a [Nicolás del Caño](https://www.xn--nicolasdelcao-tkb.com.ar/)
+<br>
+<img src="Archivos/knn_checho.png" />
+]
+
+--
+
+.right-column[
+Pero los datos dicen otra cosa...
+```{r knn, echo=FALSE}
+library(tidyverse)
+library(googlesheets4)
+library(gargle)
+library(ggimage)
+library(class)
+
+datos <- read_sheet("1D_nBkh3nJ5io1-FQ7o1MCfqRNMVH5-nKKmiIe_ZFhEg")
+
+clones <- datos
+
+# Agregar columna de ID
+clones$id <- rep(1:nrow(clones))
+
+names(clones)
+
+# Eliminar columnas innecesarias
+clones <- clones %>% 
+  select(-"Marca temporal", -"Poné lo que quieras... parecidos, chistes, comentarios, etc...")
+
+# Pivotear variables
+clones <- clones %>% 
+  select(id, everything()) %>% 
+  pivot_longer(cols = c("Facha de Keanu": "Copadez de Javier"),
+               names_to = "personaje",
+               values_to = "puntaje")
+
+clones
+
+
+
+
+# Separar variables categóricas
+clones <- clones %>% 
+  mutate(personaje = str_remove(personaje, "de "),
+         personaje = str_remove(personaje, "del "))
+
+clones %>% 
+  group_by(personaje) %>% 
+  summarise(valor_promedio = mean(puntaje)) %>% 
+  ggplot(aes(x = valor_promedio, y = personaje)) +
+  geom_point()
+
+clones <- clones %>% 
+  separate(personaje,  into = c("metrica", "persona"))
+
+clones
+
+# Pivotear ancho 
+
+clones <- clones %>% 
+  pivot_wider(id_cols = c(id, persona),
+              names_from = metrica,
+              values_from = puntaje)
+
+clones
+
+
+resultados <- clones %>% 
+  group_by(persona) %>% 
+  summarise(facha_promedio = mean(Facha),
+            copadez_promedio = mean(Copadez))
+
+ggplot(resultados, aes(x = copadez_promedio, y = facha_promedio, color = persona)) +
+  geom_point()
+
+# Creo un dataframe de las fotos ----
+persona <- resultados %>% 
+  select(persona) %>% 
+  pull()
+
+# Creo un vector de imágenes
+ruta <- "knn"        # Ruta de las fotos
+extension <- "png"   # Extensión de los archivos de imágenes
+
+# nombres de los archivos
+imagen <- c("Ben", "Brad", "Javier", "jeff", "keanu", "mono", "nico", 
+            "ricky", "roberto", "russell", "sergio")
+
+# Creo el vector de fotos con dirección y extensión completa
+foto <- str_c(ruta, imagen, sep = "/")
+foto <- str_c(foto, extension, sep = ".")
+
+# Creo el dataframe y lo agrego al dataframe resultados
+pics <- data.frame(persona, foto)
+
+resultados <- left_join(resultados, pics)
+
+resultados
+
+ggplot(resultados, aes(x = copadez_promedio, y = facha_promedio)) +
+  geom_image(aes(image=foto), size = 0.085) +
+  theme_minimal() +
+  scale_x_continuous(limits = c(1,10)) +
+  scale_y_continuous(limits = c(1,10)) +
+  labs(title = "Datos, no opinión",
+       x = "Copadez",
+       y = "Facha",
+       caption = "Datos relevados entre el 23 y el 28 de junio de 2021\nNinguna tía estuvo involucrada en el relevamiento")
+
+
+```
+
+]
+---
+class: inverse
+# ¿Qué es R y para qué sirve en RRHH?
+
+
+---
+# ¿Qué es R?
+
+**R** es un lenguaje de código abierto, que se hizo conocido inicialmente como un lenguaje de análisis estadístico.
+
+--
+
+Hoy en día, y gracias a la comunidad de desarrolladores quienes expandieron sus capacidades, se puede usar R para muchas cosas más.
+
+--
+Los principales usuarios de R vienen de muchas profesiones que mayormente no está relacionada con las Ciencias de la Computación, de ahí que se prioriza la usabilidad del código, la reproducibilidad de los proyectos, a veces en desmedro de la performance, pero con una diversidad de paquetes y aplicaciones que hacen más simple la curva de aprendizaje.
+
+--
+
+En R podés trabajar con cualquier tipo de datos, y hacer todo tipo de análisis que se te ocurra.
+
+---
+# Análisis de Clusters
+
+.left-column[
+Los análisis de clusters son útiles para encontrar grupos (clusters) entre los datos.
+```{r cluster1, echo = FALSE}
+# Cargo los datos desde un repositorio de github
+datos_rh <- read_csv("https://raw.githubusercontent.com/mlambolla/Analytics_HR_Attrition/master/HR_comma_sep.csv")
+
+# Gráfico de dispersión de Desempeño vs. Satisfacción
+ggplot(datos_rh, aes(x = last_evaluation, y = satisfaction_level, color = factor(left)))+
+  geom_point(alpha = 0.8)+
+  scale_color_manual(values = c("#BFC9CA","#2874A6"))+
+  labs(title = "Niveles de Desempeño y de Satisfacción",
+       subtitle = "0 = Empleados Activos, 1 = Renuncias",
+       x= "Desempeño",
+       y= "Satisfacción",
+       color = "Estado del\nEmpleado")
+```
+
+]
+
+```{r}
+
+```
+

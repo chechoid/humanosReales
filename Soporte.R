@@ -12,6 +12,10 @@ library(readr)     # Carga de archivos
 library(ggplot2)   # Hacer gráficos
 
 
+
+
+
+
 # Fuente de datos ------------
 
 encuesta <- read_delim("https://raw.githubusercontent.com/r4hr/r4hr_introduccion_dplyr/main/Datos/encuesta_sueldos.csv",
@@ -23,7 +27,6 @@ encuesta <- read_delim("https://raw.githubusercontent.com/r4hr/r4hr_introduccion
 # ¿Cómo saber si un paquete está cargado?
 
 glimpse(encuesta)
-
 
 # El "pipe" (Ctrl + Shift + M) -------
 
@@ -45,6 +48,11 @@ encuesta %>%
 
 
 
+
+
+
+
+
 # Funciones principales de dplyr ------------
 
 # Select ------
@@ -56,6 +64,12 @@ encuesta %>%
 # Variante: Selección por condiciones
 encuesta %>%
   select_if(is.numeric) # Selecciona variables numéricas únicamente
+
+
+
+
+
+
 
 
 
@@ -77,6 +91,10 @@ encuesta %>%
 # Filtramos los empleados que son de Universidad Privada y de empresas con más de 700 empleados.
 encuesta %>%
   filter(universidad == "Universidad Privada" &  empleados > 700)
+
+
+
+
 
 
 # Caso de Estudio 1 --------------
