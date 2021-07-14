@@ -4,6 +4,14 @@
     <title>People Analytics con R</title>
     <meta charset="utf-8" />
     <script src="libs/header-attrs/header-attrs.js"></script>
+    <script src="libs/htmlwidgets/htmlwidgets.js"></script>
+    <link href="libs/vis/vis.css" rel="stylesheet" />
+    <script src="libs/vis/vis.min.js"></script>
+    <script src="libs/visNetwork-binding/visNetwork.js"></script>
+    <link href="libs/wordcloud2/wordcloud.css" rel="stylesheet" />
+    <script src="libs/wordcloud2/wordcloud2-all.js"></script>
+    <script src="libs/wordcloud2/hover.js"></script>
+    <script src="libs/wordcloud2-binding/wordcloud2.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
@@ -11,11 +19,11 @@
 class: center, middle, inverse, title-slide
 
 # People Analytics con R
-## limpiando datos con dplyr
-### <svg viewBox="0 0 448 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg">
+## Análisis Predictivo de Turnover
+### <svg viewBox="0 0 448 512" style="position:relative;display:inline-block;top:.1em;fill:white;height:2em;" xmlns="http://www.w3.org/2000/svg">
 <path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"></path>
 </svg>
-<a href="https://www.linkedin.com/in/sergiogarciamora/">Sergio Garcia Mora</a><br><br><svg viewBox="0 0 496 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"> <path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm117.8-146.4c-10.2-8.5-25.3-7.1-33.8 3.1-20.8 25-51.5 39.4-84 39.4s-63.2-14.3-84-39.4c-8.5-10.2-23.7-11.5-33.8-3.1-10.2 8.5-11.5 23.6-3.1 33.8 30 36 74.1 56.6 120.9 56.6s90.9-20.6 120.9-56.6c8.5-10.2 7.1-25.3-3.1-33.8zM168 240c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-60c-25.7 0-55.9 16.9-59.9 42.1-1.7 11.2 11.5 18.2 19.8 10.8l9.5-8.5c14.8-13.2 46.2-13.2 61 0l9.5 8.5c8.5 7.4 21.6.3 19.8-10.8-3.8-25.2-34-42.1-59.7-42.1z"></path></svg> <a href="https://data-4hr.com">Data 4HR</a>
+<a href="https://www.linkedin.com/in/sergiogarciamora/">Sergio Garcia Mora</a><br><br><svg viewBox="0 0 496 512" style="position:relative;display:inline-block;top:.1em;fill:white;height:2em;" xmlns="http://www.w3.org/2000/svg"> <path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm117.8-146.4c-10.2-8.5-25.3-7.1-33.8 3.1-20.8 25-51.5 39.4-84 39.4s-63.2-14.3-84-39.4c-8.5-10.2-23.7-11.5-33.8-3.1-10.2 8.5-11.5 23.6-3.1 33.8 30 36 74.1 56.6 120.9 56.6s90.9-20.6 120.9-56.6c8.5-10.2 7.1-25.3-3.1-33.8zM168 240c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-60c-25.7 0-55.9 16.9-59.9 42.1-1.7 11.2 11.5 18.2 19.8 10.8l9.5-8.5c14.8-13.2 46.2-13.2 61 0l9.5 8.5c8.5 7.4 21.6.3 19.8-10.8-3.8-25.2-34-42.1-59.7-42.1z"></path></svg> <a href="https://data-4hr.com">Data 4HR</a>
 ### HR Bootcamp - Humanos Reales
 
 ---
@@ -36,129 +44,28 @@ class: center, middle, inverse, title-slide
 * 💪 Lic. en Relaciones del Trabajo con formación en Data Mining
 * ✈️ Fundador de [Data 4HR](https://data-4hr.com/)
 * 💹 SME People Analytics en [Data IQ](https://dataiq.com.ar/)
-* 👨‍🏫 Profesor de People Analytics en ITBA
+* 👩‍🏫 Profesor de People Analytics en ITBA
 * 🍷 Fundador del [Club de R para RRHH](https://r4hr.club)
 * 👑 Meme Manager en varias comunidades
 
 ]
 ---
 
-.left-column[
+.pull-left[
 En alguna época solía bromear con que era parecido a [Nicolás del Caño](https://www.xn--nicolasdelcao-tkb.com.ar/)
 &lt;br&gt;
-&lt;img src="Archivos/knn_checho.png" /&gt;
+&lt;img src="Archivos/knn_checho.png" width="60%" /&gt;
 ]
 
 --
 
-.right-column[
+.pull-right[
 Pero los datos dicen otra cosa...
-
-```
-##  [1] "Marca temporal"                                                
-##  [2] "Facha de Keanu"                                                
-##  [3] "Copadez de Keanu"                                              
-##  [4] "Facha de Russell"                                              
-##  [5] "Copadez de Russell"                                            
-##  [6] "Facha de Nico"                                                 
-##  [7] "Copadez de Nico"                                               
-##  [8] "Facha de Roberto"                                              
-##  [9] "Copadez de Roberto"                                            
-## [10] "Facha de Jeff"                                                 
-## [11] "Copadez de Jeff"                                               
-## [12] "Facha de Brad"                                                 
-## [13] "Copadez de Brad"                                               
-## [14] "Facha del Mono"                                                
-## [15] "Copadez del Mono"                                              
-## [16] "Facha de Sergio"                                               
-## [17] "Copadez de Sergio"                                             
-## [18] "Facha de Ricky"                                                
-## [19] "Copadez de Ricky"                                              
-## [20] "Facha de Ben"                                                  
-## [21] "Copadez de Ben"                                                
-## [22] "Facha de Javier"                                               
-## [23] "Copadez de Javier"                                             
-## [24] "Poné lo que quieras... parecidos, chistes, comentarios, etc..."
-## [25] "id"
-```
-
-```
-## # A tibble: 1,452 x 3
-##       id personaje          puntaje
-##    &lt;int&gt; &lt;chr&gt;                &lt;dbl&gt;
-##  1     1 Facha de Keanu          10
-##  2     1 Copadez de Keanu        10
-##  3     1 Facha de Russell         7
-##  4     1 Copadez de Russell      10
-##  5     1 Facha de Nico            1
-##  6     1 Copadez de Nico          1
-##  7     1 Facha de Roberto         1
-##  8     1 Copadez de Roberto       1
-##  9     1 Facha de Jeff            5
-## 10     1 Copadez de Jeff          5
-## # ... with 1,442 more rows
-```
-
 &lt;img src="humanosReales2021_files/figure-html/knn-1.png" width="504" /&gt;
-
-```
-## # A tibble: 1,452 x 4
-##       id metrica persona puntaje
-##    &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;
-##  1     1 Facha   Keanu        10
-##  2     1 Copadez Keanu        10
-##  3     1 Facha   Russell       7
-##  4     1 Copadez Russell      10
-##  5     1 Facha   Nico          1
-##  6     1 Copadez Nico          1
-##  7     1 Facha   Roberto       1
-##  8     1 Copadez Roberto       1
-##  9     1 Facha   Jeff          5
-## 10     1 Copadez Jeff          5
-## # ... with 1,442 more rows
-```
-
-```
-## # A tibble: 726 x 4
-##       id persona Facha Copadez
-##    &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt;
-##  1     1 Keanu      10      10
-##  2     1 Russell     7      10
-##  3     1 Nico        1       1
-##  4     1 Roberto     1       1
-##  5     1 Jeff        5       5
-##  6     1 Brad       10      10
-##  7     1 Mono       10      10
-##  8     1 Sergio     10      10
-##  9     1 Ricky      10      10
-## 10     1 Ben         8       8
-## # ... with 716 more rows
-```
-
-&lt;img src="humanosReales2021_files/figure-html/knn-2.png" width="504" /&gt;
-
-```
-## # A tibble: 11 x 4
-##    persona facha_promedio copadez_promedio foto           
-##    &lt;chr&gt;            &lt;dbl&gt;            &lt;dbl&gt; &lt;chr&gt;          
-##  1 Ben               8.23             6.47 knn/Ben.png    
-##  2 Brad              8.52             7.55 knn/Brad.png   
-##  3 Javier            6.89             6.56 knn/Javier.png 
-##  4 Jeff              5.06             6.45 knn/jeff.png   
-##  5 Keanu             7.77             8.74 knn/keanu.png  
-##  6 Mono              3.30             6.30 knn/mono.png   
-##  7 Nico              4.95             4.77 knn/nico.png   
-##  8 Ricky             4.68             6.44 knn/ricky.png  
-##  9 Roberto           2.52             2.92 knn/roberto.png
-## 10 Russell           5.56             6.59 knn/russell.png
-## 11 Sergio            7.65             9.39 knn/sergio.png
-```
-
-&lt;img src="humanosReales2021_files/figure-html/knn-3.png" width="504" /&gt;
 
 ]
 ---
-class: inverse
+class: inverse center middle
 # ¿Qué es R y para qué sirve en RRHH?
 
 
@@ -172,6 +79,7 @@ class: inverse
 Hoy en día, y gracias a la comunidad de desarrolladores quienes expandieron sus capacidades, se puede usar R para muchas cosas más.
 
 --
+
 Los principales usuarios de R vienen de muchas profesiones que mayormente no está relacionada con las Ciencias de la Computación, de ahí que se prioriza la usabilidad del código, la reproducibilidad de los proyectos, a veces en desmedro de la performance, pero con una diversidad de paquetes y aplicaciones que hacen más simple la curva de aprendizaje.
 
 --
@@ -179,15 +87,50 @@ Los principales usuarios de R vienen de muchas profesiones que mayormente no est
 En R podés trabajar con cualquier tipo de datos, y hacer todo tipo de análisis que se te ocurra.
 
 ---
-# Análisis de Clusters
+## Análisis de Clusters
 
-.left-column[
+.pull-left[
 Los análisis de clusters son útiles para encontrar grupos (clusters) entre los datos.
-&lt;img src="humanosReales2021_files/figure-html/cluster1-1.png" width="504" /&gt;
+&lt;img src="humanosReales2021_files/figure-html/cluster1-1.png" width="80%" /&gt;
 
 ]
 
+.pull-right[
+&lt;img src="humanosReales2021_files/figure-html/cluster2-1.png" width="504" /&gt;
 
+]
+
+---
+## Organizational Network Analysis
+
+.pull-left[
+<div id="htmlwidget-1690453578cb9945af51" style="width:504px;height:504px;" class="visNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1690453578cb9945af51">{"x":{"nodes":{"id":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264],"label":["Javier Calzolari","Pablo Senra","Sergio E. Garcia Mora","Erik van Vulpen","Facundo Iannello","Marina Cañizo","Eduardo Terrón Gómez","Daniela Alonso","Ariel Felsztyna","Micaela M. Kulesz, PhD","Santiago Candia","Carsten Kraus","Yael Epstein","Vanina Petillo","Miranda Chab","María Belén Karamanukian","Macarena Estévez - Socia Deloitte","Daniela Clavel","Gabriela Gisele Pérez","Andrea Cesar","Chiara Usuardi","Carlos Matias Bavoleo","María Florencia Nápoli","Jose Istillarte","Héctor Vega","Maximiliano Eggers","Natalia Gudalewicz","Alejandro Rodriguez I.","Gustavo Bulgach","Alejandro Tejada Borges","Carolina Coronado","Fernando Morente Cadenas de Llano","Noeli Daniela Rossi","Edwin Andres Sorza Gonzalez","Nataly Escobari","Luis Alfonso Gomez Zuñiga","Gerardo Floridia","Nahuel Rodriguez Araujo","David Ruiz","Edgardo Lugo","Kenny Rodriguez Olier","Renzo Enrique Palomino Távara","Fernando Flores","Victor Rumay","Marino Pernía G.","Alan Rosenfeld","Kevin Vargas","Ailén Rojas","Mariano d'Almeida","Hernan Herrera Albelo","Guadalupe Alvarez Mulleady","Damián Barbero","Emanuel Saavedra","Gloria Caterina Ruschner","Eduardo Illiano","Jaime O'Conor","Mathias Longo","Federico Piacente","Cristian Jakubowski","Mauricio Anderson","Mauro García","María Florencia Rossi","Johanna Dragone","Ramiro Savoie","Carolina Ielapi","Gilmar Argote","Agustina Ormart","Alejandro Eloy La Moglie","Rodrigo Pantoja Navajas","Jorge Vidaurre","Javier Gurevich","Christian Cerrella","Ariel Camargo","Diego Martín Vacarezza","Mirian Faig","Marcelo Piattini Velthuis","Federico Vidal","Joan Manuel Perez Meiss","Pablo A. Guzzi","Martin Carames Abente","Matias Juan Leive","Fabrisio Foscarino","Ramiro Fernández","Pablo Avenali","Ezequiel Gutt","Christian Grunblatt","Romina Prez","Roberto Panai","Rolando Gutiérrez Cortés","Ignacio Tomás Bullrich","Blanca Monreal","Agustin Markovic","Daniel Rivera Escobar","Iván Guerrero Meléndez","Jorge Brian Alarcón Flores","Fernando López Gil","Lic. Ana Belen Gonzalez Arguello","Leonardo Ballón","Marcela Huerfano","Ismael Gómez Schmidt","Juan Francisco Muñoz","Ariel Fleiderman","Anita Quevedo","Tomás Marcos","Jorge Maria Ortiz Claverol","Romain Martin","Javier Orraca","Rafael Zambrano","Luciano Borgoglio","Mariana Hariri","Yolanda Barrull","Alejandro Sánchez Rodríguez","Ignacio Lecha Val","Luis Serra Díaz-Cano","Jean (JP) Philius","Alexandru Gotoi","Emmanuel Martín Garnica","Almudena López-Cediel Verdú","Eloy Eligón","Augusto Gentile","Andrés Paredes","Francisco J. Rodríguez","Jayshween Shiron Kumar","Andreas Kyprianou","Daniel Lacunza","Mehul Pandya","Info Data 4HR","M.Angeles Alba García de la Camacha","Gisele Cabrera","Manish Anand","Barbara Anania","Andres Diaz Devia","Dan Moorehead","Valentin Veronesi","Rodrigo León Tovi","Gal Mozes","Hamza MADMOUNE","Luis Andrés Martínez Peraza","Daniela Garay","Desalina (Alina) Guarise, MPA, PHR","Gabriela Bouret","juan jose iguaran fernandez","Pablo Gómez Ase","Federico Abud","Hernán Escudero","Abhinav Meesa","Maria Nolazco Masson","Daniel Garcia Teba","Federico Ezequiel Torres","Olmo Barragan","Federico Ariel Mendez","Eduardo Valencia","Pablo Garriga Suárez","Daiana Emili","Karina Bartolome","Mariano Alonso","Nicolás Morales Galaz","Sergio Raja","Chris Coleman","Chris Wilpert","Martin Juiz","Claudio Mac-Lean","Viviana Valdés","Monica Patricia Pineda Vargas","María Emilia Charnelli","Littal Shemer Haim (ליטל שמר חיים)","Georgina Ricci","Federico Schmidt","Matías Conde","María Jesús Belizón Cebada, Ph.D.","Giovanna Constant","Edgar Leandro Jimenez","Diego Antonio Hernández Ronquillo","José De Souza","Praveen Viswam, GPHR","Paulina Verasay","Keith McNulty","Muge Bakkaloglu, PMP®","Mike West","Ana Rita Almada","Martin Andres Minnoni","An Rycek","Ewuard Avila Silva, Msc.","Jorge Esteban Saldeña","Sofia Rovito","Gaurav Guliani","Pablo Martin Karg","Sofia Fasce","Sebastián Lombraña","Federico Costa","Manuel Villalonga","Dante Maino","Eliana Moccia","NAZARENO MEDRANO","Diego Ignacio Peñaloza","Ricardo Leston","Juan Agustin Vago","Sebastian Sanchez Mazza","Simon White","Walter Alejandro Bernal","Franco Ubber Scapin","German Avanzato","Matias Monja","Juan Agustin Pisano","Nexbas S.A.","Andrew Sosa","Guido Luca Oliveri","Agustin Fusaro","Wayne Lee","Eugenio Molina","Lambolla Mariano","Jack Dunn","Dr. Andrew Doyle","Dr. Lakshmi Keerthi, PhD","Ivanna Grone","Kanwal Safdar","Edgardo Ariel Osorio","Sjoerd van den Heuvel","Romina Medina","Gabriel Ravena","Federico Vazquez Morales","Mariano Ariel Bernardoni","Juan Martín Román","Richard Rosenow","Pablo Daniel Morinigo","Raúl Mascaró","Victor Daniel Casas Hernandez","Ramiro Marchesini Piedra","Clarisa Castelloni","Martin Nash","Damian Ignacio Ramos","Patricia Isabel Romero","Santiago Donikian","Jonathan Nicolás Gimenez","Matias Rivero","Amalia Carolina Guaymás Canavire","Martin Maffioli","Alejandro Salevsky","Florencia Novidelsky","Fernando Croceri","Adrián Martín Urrutia Toledo","Alejandro Tamashiro","Nicolás Martins","Rodrigo Lloret","Rocío Cairo Presepi","Rubén Flecha","Fernando Gonzalez","Pablo Tempone","Romina Elena Almada","Sergio Miller","Gabriela Plantie","Diego Juritz","Eduardo J. Azzola","Justo Raúl Revilla Calle","Federico Rosenhain","Lissett Goncalves","Agustín Demarchi","Guillermo Lissa","Omar Ernesto Cabrera Rosero","Marcos Feole","Gaston Liberman","Daniela Blanco","Leandro Martín Ríos","Lucas Pogorelsky"],"color":["#DD6B06","#DD6B06","#DD6B06","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB","#2CAFBB"],"x":[0.183369393980959,-0.667191588629986,0.480492717448509,0.454449251961525,-0.111449025329603,0.169627885726813,0.0280556181131333,0.356730010468394,0.195765337327216,0.442559506264456,0.262221467549628,0.150418780774464,0.0822655277185782,0.442837510610203,0.341302871404819,-0.127885118500852,0.1383750693218,0.258007466802529,0.148883541715856,-0.136783212458113,0.404708345805347,0.228418460799978,0.199369823965161,-0.0334061437030659,0.419885638348441,0.372721574073002,0.330943758891881,0.237512585814551,0.40951000152938,0.26848740756141,-0.170200035760045,0.0910342625930245,0.39743983103265,-0.187943170338946,0.465644574763838,0.160622349320858,0.448924111328431,-0.0371573469383256,-0.202096260761451,-0.170693746278104,-0.0141123157634654,-0.0898132761605769,0.258221860368804,-0.114875009904768,-0.155161908028487,0.348876552606346,0.275421812313053,0.298700421553343,0.226970784795562,0.295624675449269,-0.0856829996457026,0.377470347794388,-0.0782409173162248,0.345475289399273,0.209694038630253,0.215075861369523,-0.0835152137033083,-0.327472972880046,0.266921320816613,0.436505703344596,-0.0228676323256488,0.0751540999559779,0.0767601896492851,-0.0376770827429633,0.0271585975080342,-0.209699576925136,0.309060646560484,0.347706476368834,0.312854971267491,0.0151181051159779,0.303242721691809,0.14370194249942,0.12884444331227,0.389048429794152,0.335043336670139,0.0342482559762569,0.213845083576358,0.291576309691552,0.388980835898386,0.480038563147047,-0.077469104842486,0.189188538781549,0.183049712647354,-0.977045300689162,-0.977754176092186,-0.932381456295482,-1,0.23560654783139,0.336523850284891,0.328147054385316,0.851190119531905,0.501181772447559,0.0114676969029839,0.290170866734996,0.915096272984649,0.913643884400591,0.986593904082987,0.681463882188255,0.893576859312656,0.465804023619532,0.0109769952317527,0.27828603754848,0.532471943493902,0.0954734574451115,0.0376486024725935,0.857997179326717,0.446145378935467,0.155373561986392,0.393336911541468,0.401655654947155,0.205247538560194,0.807112269271228,0.629679581411736,0.899719655384388,0.674498505972976,0.876074864614255,0.823164998995774,0.840799988513287,0.222139738718867,0.17162142370056,0.765853231184895,0.228184151992675,0.0418650408486965,0.367875960319492,0.785439534577405,0.31320048103565,0.77805641330097,0.737031966227666,0.697130875780585,0.946091163211821,0.700079905019999,0.848417982782917,0.726478897838977,0.165773669189706,0.643347586336398,0.596489305447585,0.294244039615255,0.167410182177606,0.131717872320926,0.170889139862307,0.0411407042078127,0.915089842497077,0.966328836892879,0.0891605796130177,0.264137146398354,0.216493333342664,0.930946065050216,0.72677611333786,0.599128704342534,0.254831150239704,0.617448425208924,0.652852182839702,0.597703496390966,0.751120113191163,0.53618507460507,0.437885353164148,0.835631006698257,0.728184118482033,0.957918498120399,0.307662590692739,0.58121259307214,0.252855139882956,1,0.0600668601233012,0.907322421003336,0.792297724364583,0.758341111025199,0.0970932177120303,0.607088659418436,0.0524136081216084,0.411363001072787,0.660006531498384,0.288981467873091,0.984973383749213,0.806084196257,0.827618698579215,0.477383454363916,0.228678201513882,0.525971977650287,0.116577589038704,0.782358515628412,0.107569573917924,0.714480801544318,-0.00235215777938469,0.513902901089747,0.239059020464332,0.651517684383686,0.510864518483207,0.526513919242503,0.715607452178812,0.714727791797821,0.706936726630531,0.09287651829831,0.725834512545197,0.934161460331977,0.950407529948069,0.378577750930812,0.42457764619244,0.754219076463232,0.37575140955682,0.476822829967039,0.114750485089538,0.36716061297815,0.843274195925648,0.466337155916883,0.519622478167005,0.161926462534495,0.0709875853089712,0.797718168241929,0.0453758445806514,0.813691539535562,0.621660119449799,0.199431358215293,0.17925985572532,0.561540146603432,0.542183087182736,0.308857975567668,0.603341789533646,0.862043072390257,0.607413567636571,0.774958375851196,0.547601877838535,0.814868213682991,0.8885429616051,0.712612088923242,0.662995682063382,0.859975664481172,0.0206716887180312,0.425416366391527,0.314306045323721,0.378808132011471,0.18480420902816,0.830883150976783,0.59126750716747,0.966118682240078,0.105783311816949,0.135056145817635,0.57025390811977,0.26044935973981,0.664463368695246,0.634016805449893,0.144378854332827,0.881738475334193,0.720688270278999,0.167883601778443,0.929942556847722,0.238122270095502,0.889960660120624,0.00472889264089793,0.643708505050522,0.994739613417328,0.774450764499546,0.894573428855402,0.0851522488281502,0.404390277927147,0.68380538262132,0.822299922064719,0.764390549686201,0.0947030376468336,-0.015835634959,0.336786466439,0.353930645655487,0.433887483027602,0.942078624485696],"y":[-0.492337706542677,-0.470292587539256,0.422592403270998,-0.119628214981555,-0.550644473199414,-0.894150893503605,-0.960987090567969,-0.0743839723428731,-0.04832190045094,-0.86358653634843,-0.0299672992409433,-0.821187167086742,-0.978073745073058,-0.738226900159537,-0.112564204291066,-0.793831514470438,-0.736361995752151,-0.952377657256811,-0.0371172496451861,-0.682243292642307,-0.825069097258964,-0.0291543754362933,-0.119470780335534,-0.944775881293305,-0.10126427520044,-0.180834885811541,-0.0532933288917139,-0.10140077651397,-0.179362400780557,-0.0727955442448908,-0.780368948785779,-0.851006235610754,-0.909522000849692,-0.730324102002363,-0.793861717843755,-0.0797316207285055,-0.19064452475008,-0.883571277494809,-0.673669477580764,-0.529442375759858,-0.750483910791941,-0.888965772515438,-0.130008402925133,-0.843460967024994,-0.608761588818922,-0.807153530998189,-0.827770014723358,-0.0405155551775606,-0.993396151425854,-0.753330143680887,-0.619633130457111,-0.741005272459532,-0.766803884135233,-0.154065781431346,-0.0803082357847958,-0.767725739268686,-0.703909448169337,-0.535868578828666,-0.892147037777062,-0.149336100977311,-0.648734481283865,-0.91039395156345,-0.774859071263143,-0.820022939547904,-0.821567933961512,-0.60544959067602,-0.963501949566159,-0.924736381647037,-0.168432153416567,-0.90250134922281,-0.0961918832213262,-1,-0.937396951703823,-0.134601631691201,-0.867591730984964,-0.706409810627267,-0.8550271803531,-0.137541223680886,-0.0870672412731619,-0.159114240012983,-0.138085331219021,-0.958084709914896,-0.0141233719987499,-0.566335130506905,-0.626666455384503,-0.669656350138968,-0.508490246581329,0.925534399222456,0.199522594165075,0.881856935691413,0.0803687469782344,0.126783079937298,0.602698484665276,0.489211268418635,0.291609914211655,0.561140188586394,0.566296858031061,0.929607140156426,0.764515603827086,1,0.436602439065212,0.881627937308674,0.746370028596598,0.497837449821773,0.336757553014787,0.293964001839894,0.648859045607744,0.770330334081656,0.986287208114989,0.305910080730953,0.719220293590275,0.0434225534892763,0.477344282710441,0.620577407295988,0.0641007763820045,0.195414626554115,0.34478072556057,0.750018369474191,0.622252060335421,0.66449393513802,0.330793014535959,0.348092251622924,0.501242873793089,0.681792262108167,0.635639501294843,0.71306645267293,0.888153133108681,0.16930381399375,0.82633132036798,0.458629910757056,0.0137403931150322,0.620837731540995,0.770978405764998,0.312602575094233,0.944908694621438,0.723165862224189,0.607304005166649,0.483689739663109,0.713180490934509,0.883753194748522,0.277191098459904,0.23604717035741,0.518799612967897,0.377683276107739,0.198175812630839,0.870923616821741,0.658889164364606,0.709811399284997,0.0316879980924505,0.823655948200987,0.0961633310621028,0.84739337520724,0.642289318117913,0.0599501448810817,0.81173678950167,0.150956334030623,0.410593697812922,0.932979681341646,0.612661638172854,0.294154292431145,0.930269182858688,0.761313368096335,0.468165706610297,0.572829833797349,0.495054482041595,0.105845234581404,0.822787052279821,0.808789264136043,0.795759273079162,0.419568423966879,0.216478099693726,0.759735167216637,0.946599859296744,0.313625701271821,0.79229605936237,0.682429680079932,0.839627635419623,0.43358074993938,0.942936874558644,0.555872997224237,0.728151564670683,0.208172277633967,0.279855884067511,0.372112582542079,0.885253126224398,0.538793730941001,-0.0102741088480498,0.249316385365617,0.563500345991212,0.112301693060356,0.399092969440583,0.576111058996409,0.262734397759224,0.641710256212117,0.709776853584854,0.343136312144633,0.859335316899152,0.816762850151199,0.000698804944627929,0.601108143996911,0.943527271548415,0.438797446188862,0.923947719677227,0.141546883293816,0.743816950688307,0.664474239465078,0.247659634879012,0.630935954995856,0.177903846581545,0.727873251943411,0.571099168650135,0.885798712021077,0.802448058105393,0.557821578909692,0.165519673366845,0.990746340086462,0.81014044535557,0.982600162815148,0.532969701085353,0.24380166550293,0.429942669203493,0.0745204050195587,0.847396778017062,0.432006594706171,0.483972592989198,0.680855987859116,0.814051286840415,0.664857795046543,0.947684326906306,0.389889006368821,0.511624739253995,0.194746596151988,0.242403344674511,0.354061757478684,0.246786375001067,0.323071747622966,0.618898635786415,0.864144077864999,0.682205384556118,0.334664163901666,0.571485608148561,0.835884461384198,0.701181229869009,0.879689185085386,0.393767860843166,0.176622700610242,0.262971690367232,0.129685763306397,0.546191046569592,0.152908096384196,0.396324378571053,0.242741978647679,0.357377230850825,0.683320219500051,0.748513629298989,0.215038730577962,0.485074599410457,0.532311775017309,0.75407258515118,0.48295645473409,0.970150397548857,0.783434194384256,0.891125965987785,0.400879025382763]},"edges":{"from":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"to":[67,48,46,68,28,30,20,73,9,22,31,65,12,21,72,59,52,8,18,39,74,40,55,7,34,53,4,82,5,58,77,43,32,19,37,66,54,51,29,25,50,56,71,78,63,70,24,41,47,36,17,76,16,23,62,49,6,45,80,57,81,60,61,26,10,15,75,38,27,35,33,79,83,64,42,69,11,3,14,44,13,86,85,58,81,84,87,146,241,257,208,92,48,28,238,112,242,30,116,118,236,182,180,124,132,121,206,103,9,102,120,131,91,22,159,160,229,162,154,231,133,148,125,93,8,262,139,192,140,173,195,252,74,213,214,172,217,55,253,152,193,119,117,4,210,183,144,151,190,149,255,168,221,240,43,247,96,239,122,201,220,141,19,251,136,261,186,167,37,202,171,129,54,207,258,29,137,25,145,113,90,127,100,94,215,212,1,71,107,123,115,78,234,95,184,105,174,204,197,101,142,223,254,216,155,177,211,263,98,97,256,166,264,109,36,138,114,128,130,191,99,260,165,23,170,147,110,156,222,181,80,161,237,230,169,81,203,235,60,26,126,179,15,164,178,27,194,205,243,157,150,259,79,225,153,143,187,248,232,176,175,108,83,228,226,196,224,88,245,135,244,69,89,106,249,219,246,11,233,189,198,250,158,199,218,188,185,104,134,227,163,200,209,111],"peso":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"nodesToDataframe":true,"edgesToDataframe":true,"options":{"width":"100%","height":"100%","nodes":{"shape":"dot","physics":false,"color":{"background":"#5DBAC3","border":"#01636D"}},"manipulation":{"enabled":false},"edges":{"smooth":false,"color":{"color":"grey","highlight":"#014D54"}},"physics":{"stabilization":false}},"groups":null,"width":null,"height":null,"idselection":{"enabled":false,"style":"width: 150px; height: 26px","useLabels":true,"main":"Select by id"},"byselection":{"enabled":false,"style":"width: 150px; height: 26px","multiple":false,"hideColor":"rgba(200,200,200,0.5)","highlight":false},"main":null,"submain":null,"footer":null,"background":"rgba(0, 0, 0, 0)","igraphlayout":{"type":"square"},"highlight":{"enabled":true,"hoverNearest":false,"degree":1,"algorithm":"all","hideColor":"rgba(200,200,200,0.5)","labelOnly":true},"collapse":{"enabled":false,"fit":false,"resetHighlight":true,"clusterOptions":null,"keepCoord":true,"labelSuffix":"(cluster)"}},"evals":[],"jsHooks":[]}</script>
+
+]
+
+.pull-right[
+
+Se pueden hacer análisis de grafos para desarrollar proyectos de Organizational Network Analysis.
+
+En este sencillo ejemplo, estamos analizando las conecciones de LinkedIn de 3 profesores de People Analytics, para detectar los Data Scientists que tenemos en común. Este análisis se puede usar para desarrollar un programa de referidos. 🤯
+
+]
+
+---
+## Text Mining
+
+Se puede analizar el texto de encuestas, curriculum vitaes, y opiniones de sitios como Glassdoor. Este es un ejemplo de una encuesta sobre Home Office del año pasado.
+
+.pull-left[
+&lt;img src="humanosReales2021_files/figure-html/tm1-1.png" width="70%" /&gt;
+]
+
+.pull-right[
+<div id="htmlwidget-25962432082e848a9f87" style="width:75%;height:504px;" class="wordcloud2 html-widget"></div>
+<script type="application/json" data-for="htmlwidget-25962432082e848a9f87">{"x":{"word":["empresas","creo","productividad","muchas","teletrabajo","trabajar","modalidad","cuenta","forma","objetivos","puede","tener","casa","herramientas","oficina","situación","costos","muchos","cambiar","empleado","equipo","manera","mayor","pandemia","personas","remoto","tenían","trabajando","cambio","dar","demostrar","día","empresa","experiencia","formas","igual","lugar","mucho","necesario","necesidad","oportunidad","posible","resultados","ser","tareas","casos","conectados","cosas","cultura","dudas","empleador","existía","hacer","lado","lograr","mantener","mejor","metodología","misma","mucha","posibilidad","procesos","recursos","seguir","trabaja","vamos","ver","vida"],"freq":[21,19,16,14,12,12,9,8,8,8,8,8,7,7,7,7,6,6,5,5,5,5,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"fontFamily":"Segoe UI","fontWeight":"bold","color":["#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe","#4445f8","#7563fa","#9881fc","#b59ffe"],"minSize":0,"weightFactor":5.14285714285714,"backgroundColor":"white","gridSize":0,"minRotation":-0.785398163397448,"maxRotation":0.785398163397448,"shuffle":true,"rotateRatio":0.4,"shape":"circle","ellipticity":0.65,"figBase64":null,"hover":null},"evals":[],"jsHooks":{"render":[{"code":"function(el,x){\n                        console.log(123);\n                        if(!iii){\n                          window.location.reload();\n                          iii = False;\n\n                        }\n  }","data":null}]}}</script>
+
+]
 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>

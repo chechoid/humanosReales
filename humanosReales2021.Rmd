@@ -1,8 +1,8 @@
 ---
 title: "People Analytics con R"
-subtitle: "limpiando datos con dplyr"
+subtitle: "Análisis Predictivo de Turnover"
 institute: "HR Bootcamp - Humanos Reales"
-author: '`r icons::fontawesome("linkedin")` [Sergio Garcia Mora](https://www.linkedin.com/in/sergiogarciamora/)<br><br>`r icons::fontawesome("smile-wink")` [Data 4HR](https://data-4hr.com)'
+author: '`r icons::icon_style(icons::fontawesome$brands$linkedin, fill = "white", scale = 2)` [Sergio Garcia Mora](https://www.linkedin.com/in/sergiogarciamora/)<br><br>`r icons::icon_style(icons::fontawesome("smile-wink"), fill = "white", scale = 2)` [Data 4HR](https://data-4hr.com)'
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -49,31 +49,25 @@ style_duo_accent(
 ]
 ---
 
-.left-column[
+.pull-left[
 En alguna época solía bromear con que era parecido a [Nicolás del Caño](https://www.xn--nicolasdelcao-tkb.com.ar/)
 <br>
-<img src="Archivos/knn_checho.png" />
+<img src="Archivos/knn_checho.png" width="60%" />
 ]
 
 --
 
-.right-column[
+.pull-right[
 Pero los datos dicen otra cosa...
 ```{r knn, echo=FALSE}
 library(tidyverse)
-library(googlesheets4)
-library(gargle)
 library(ggimage)
-library(class)
 
-datos <- read_sheet("1D_nBkh3nJ5io1-FQ7o1MCfqRNMVH5-nKKmiIe_ZFhEg")
-
-clones <- datos
+clones <- read_delim("https://raw.githubusercontent.com/chechoid/humanosReales/main/Datos/clones.csv",
+                     delim = ";")
 
 # Agregar columna de ID
 clones$id <- rep(1:nrow(clones))
-
-names(clones)
 
 # Eliminar columnas innecesarias
 clones <- clones %>% 
@@ -86,26 +80,16 @@ clones <- clones %>%
                names_to = "personaje",
                values_to = "puntaje")
 
-clones
-
-
-
 
 # Separar variables categóricas
 clones <- clones %>% 
   mutate(personaje = str_remove(personaje, "de "),
          personaje = str_remove(personaje, "del "))
 
-clones %>% 
-  group_by(personaje) %>% 
-  summarise(valor_promedio = mean(puntaje)) %>% 
-  ggplot(aes(x = valor_promedio, y = personaje)) +
-  geom_point()
 
 clones <- clones %>% 
   separate(personaje,  into = c("metrica", "persona"))
 
-clones
 
 # Pivotear ancho 
 
@@ -114,18 +98,14 @@ clones <- clones %>%
               names_from = metrica,
               values_from = puntaje)
 
-clones
-
 
 resultados <- clones %>% 
   group_by(persona) %>% 
   summarise(facha_promedio = mean(Facha),
             copadez_promedio = mean(Copadez))
 
-ggplot(resultados, aes(x = copadez_promedio, y = facha_promedio, color = persona)) +
-  geom_point()
 
-# Creo un dataframe de las fotos ----
+## Creo un dataframe de las fotos ----
 persona <- resultados %>% 
   select(persona) %>% 
   pull()
@@ -147,10 +127,9 @@ pics <- data.frame(persona, foto)
 
 resultados <- left_join(resultados, pics)
 
-resultados
 
 ggplot(resultados, aes(x = copadez_promedio, y = facha_promedio)) +
-  geom_image(aes(image=foto), size = 0.085) +
+  geom_image(aes(image=foto), size = 0.09) +
   theme_minimal() +
   scale_x_continuous(limits = c(1,10)) +
   scale_y_continuous(limits = c(1,10)) +
@@ -164,7 +143,7 @@ ggplot(resultados, aes(x = copadez_promedio, y = facha_promedio)) +
 
 ]
 ---
-class: inverse
+class: inverse center middle
 # ¿Qué es R y para qué sirve en RRHH?
 
 
@@ -178,6 +157,7 @@ class: inverse
 Hoy en día, y gracias a la comunidad de desarrolladores quienes expandieron sus capacidades, se puede usar R para muchas cosas más.
 
 --
+
 Los principales usuarios de R vienen de muchas profesiones que mayormente no está relacionada con las Ciencias de la Computación, de ahí que se prioriza la usabilidad del código, la reproducibilidad de los proyectos, a veces en desmedro de la performance, pero con una diversidad de paquetes y aplicaciones que hacen más simple la curva de aprendizaje.
 
 --
@@ -185,11 +165,11 @@ Los principales usuarios de R vienen de muchas profesiones que mayormente no est
 En R podés trabajar con cualquier tipo de datos, y hacer todo tipo de análisis que se te ocurra.
 
 ---
-# Análisis de Clusters
+## Análisis de Clusters
 
-.left-column[
+.pull-left[
 Los análisis de clusters son útiles para encontrar grupos (clusters) entre los datos.
-```{r cluster1, echo = FALSE}
+```{r cluster1, echo = FALSE, out.width="80%"}
 # Cargo los datos desde un repositorio de github
 datos_rh <- read_csv("https://raw.githubusercontent.com/mlambolla/Analytics_HR_Attrition/master/HR_comma_sep.csv")
 
@@ -206,7 +186,229 @@ ggplot(datos_rh, aes(x = last_evaluation, y = satisfaction_level, color = factor
 
 ]
 
-```{r}
+.pull-right[
+```{r cluster2, echo=FALSE}
+library(ggthemes)
+
+# Seleccionamos las variables para elegir los clusters
+variables_cluster <- datos_rh %>%
+  select(last_evaluation, satisfaction_level)
+
+# Preparo los datos para hacer el cálculo
+vc <- scale(variables_cluster)
+
+# Corro el algoritmo de clustering k-means  
+fit_vc <- kmeans(vc, 3)
+
+# Agrego los clusters ajustados (calculados) al dataset
+datos_rh$cluster <- fit_vc$cluster
+
+
+# Gráfico de clusters
+ggplot(datos_rh, aes(x = last_evaluation, y = satisfaction_level, color = factor(cluster)))+
+  geom_point(alpha = 0.8)+
+  scale_color_colorblind()+
+  labs(title = "Clusters de Empleados según Desempeño y Satisfacción",
+       subtitle = "Clusters definidos mediante el algoritmo de k-means",
+       x= "Desempeño",
+       y= "Satisfacción",
+       color = "Cluster") +
+  theme_light()
+```
+
+]
+
+---
+## Organizational Network Analysis
+
+.pull-left[
+```{r ona, echo=FALSE}
+library(igraph)
+library(readr)
+library(visNetwork)
+library(networkD3)
+
+
+#### Datos ####
+
+contactos <- read_delim("https://raw.githubusercontent.com/chechoid/paw21-coding-in-r-live-to-tell/main/data/contactos.csv",
+                        delim = ";")
+
+data_scientist <- contactos %>% 
+  filter(str_detect(Position, "data.scientist")|str_detect(Position, "data.analyst|analytics"))
+
+
+origen <- data_scientist %>% 
+  distinct(Origen) %>% 
+  rename(label=Origen)
+
+contacto <- data_scientist %>% 
+  distinct(nombre_apellido) %>% 
+  rename(label=nombre_apellido)
+
+nodes <- full_join(origen, contacto, by = "label")
+
+nodes <- nodes %>% rowid_to_column("id")
+
+conexion <- data_scientist %>% 
+  group_by(Origen, nombre_apellido) %>% 
+  summarise(peso = n()) %>% 
+  ungroup()
+
+aristas <- conexion %>% 
+  left_join(nodes, by = c("Origen" = "label")) %>% 
+  rename(from = id)
+
+aristas <- aristas %>% 
+  left_join(nodes, by = c("nombre_apellido" = "label")) %>% 
+  rename(to = id)
+
+
+aristas <- select(aristas, from, to, peso)
+
+
+edges <- mutate(aristas, width = peso/5 + 1)
+
+nodes$color <- c(rep("#DD6B06", 3), rep("#2CAFBB", 261))
+
+
+referidos <- visNetwork(nodes, aristas) %>% 
+  visIgraphLayout(layout = "layout_with_fr") %>% 
+    visNodes(color = list(background = "#5DBAC3",
+                        border = "#01636D")) %>% 
+  visEdges(color = list(color = "grey", highlight = "#014D54" )) %>% 
+  visOptions(highlightNearest = TRUE)
+
+referidos
 
 ```
+
+]
+
+.pull-right[
+
+Se pueden hacer análisis de grafos para desarrollar proyectos de Organizational Network Analysis.
+
+En este sencillo ejemplo, estamos analizando las conecciones de LinkedIn de 3 profesores de People Analytics, para detectar los Data Scientists que tenemos en común. Este análisis se puede usar para desarrollar un programa de referidos. `r emo::ji("exploding_head")`
+
+]
+
+---
+## Text Mining
+
+Se puede analizar el texto de encuestas, curriculum vitaes, y opiniones de sitios como Glassdoor. Este es un ejemplo de una encuesta sobre Home Office del año pasado.
+
+.pull-left[
+```{r tm1, echo=FALSE, out.width="70%"}
+library(reshape2)
+library(googlesheets4)
+library(gargle)
+
+EncuestaHomeOffice <- sheets_read("1g2q3c_MMrBc4MehO4Yjktpu2fk7s7M8Bn2wIgV6yQHo")
+
+
+EncuestaHomeOffice <- EncuestaHomeOffice %>% 
+  select("¿Creés que va a cambiar la forma de trabajar después de esta crisis?",
+         "Justifica la respuesta")
+
+#### Limpieza de Datos ####
+
+# Cambio los nombres de las variables para hacerlo más manejable
+hos <- EncuestaHomeOffice %>%
+  rename("Cambios_Futuros" = "¿Creés que va a cambiar la forma de trabajar después de esta crisis?",
+         "Comentarios" = "Justifica la respuesta")
+
+# Text Mining 
+# Fuente: http://www.aic.uva.es/cuentapalabras/palabras-vacias.html
+
+library(tidytext)
+library(wordcloud2)
+
+
+zx <- theme(panel.background = element_blank(),
+            panel.grid.major.x = element_line(colour = "#F4F6F6"),
+            axis.line = element_line(colour = "grey"))
+
+
+eho_text <- hos %>%
+  select(Cambios_Futuros, Comentarios) %>%
+  filter(!is.na(Comentarios)) %>%
+  mutate(Comentarios = as.character(Comentarios))
+
+eho_text_pal <- eho_text %>%
+  unnest_tokens(palabra, Comentarios)
+
+
+# Un lexicon más exhaustivo y detallado
+vacias <- read_csv("https://raw.githubusercontent.com/7PartidasDigital/AnaText/master/datos/diccionarios/vacias.txt",
+                   locale = default_locale())
+
+
+# Hacer un anti_join para eliminar las palabras del corpus que están en el listado del lexicon
+eho_text_vacio <- eho_text_pal %>%
+  anti_join(vacias)
+
+
+# Si quiero armar un listado específico de palabras para eliminar del análisis, luego uso un anti_join
+vacias_adhoc <- tibble(palabra = c("trabajo", "home", "office", "van", "va"))
+
+# Hay varias palabras que se repiten y que no aportan mucho valor así que las elimino.
+eho_text_vacio <- eho_text_vacio %>%
+  anti_join(vacias_adhoc)
+
+# Ordeno los comentarios en base a la variable "Cambios_Futuros"
+library(forcats)
+
+eho_text_vacio$Cambios_Futuros <- fct_relevel(eho_text_vacio$Cambios_Futuros, "Sí", "Tal vez", "No")
+
+# Lexicon de sentimientos
+sentimientos <- read_tsv("https://raw.githubusercontent.com/7PartidasDigital/AnaText/master/datos/diccionarios/sentimientos_2.txt",
+                         col_types = "cccn",
+                         locale = default_locale())
+
+# Modificación de la función get_sentiments de tidyverse
+source("https://raw.githubusercontent.com/7PartidasDigital/R-LINHD-18/master/get_sentiments.R")
+
+## Análisis General
+eho_text_nrc <- eho_text_vacio %>%
+  right_join(get_sentiments("nrc")) %>%
+  filter(!is.na(sentimiento)) %>%
+  count(sentimiento, sort = TRUE)
+
+
+feelings <- c("negativo", "positivo", "negativo", "negativo", "negativo", "positivo", "positivo", "positivo")
+
+eho_text_nrc %>%
+  filter(sentimiento != "negativo", sentimiento !="positivo") %>%
+  cbind(feelings) %>%
+  ggplot(aes(reorder(sentimiento, n), n, fill = feelings)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  scale_fill_manual(values = c("#F5B041","#5DADE2"))+
+  zx +
+  coord_flip() +
+  labs(title="Análisis de Sentimiento",
+       caption = "Datos propios: Encuesta de Home Office 2020",
+       x = "Sentimiento",
+       y = "Frecuencia")
+
+
+```
+]
+
+.pull-right[
+```{r tm2, echo=FALSE, out.width="75%"}
+library(wordcloud2)
+library(webshot)
+
+eho_text_vacio %>%
+  filter(Cambios_Futuros == "Sí") %>%
+  count(palabra, sort = TRUE) %>%
+  filter(n >=3) %>% 
+  ungroup() %>%
+  wordcloud2( size = 0.6, color = rep_len(c("#4445f8", "#7563fa", "#9881fc", "#b59ffe"), nrow(.)))
+
+
+```
+
+]
 
