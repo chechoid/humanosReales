@@ -18,8 +18,8 @@
  *  Version: 0.4.0
  *
  * ------------------------------------------------------- */
-@import url(https://fonts.googleapis.com/css?family=Roboto:280,280i&display=swap);
-@import url(https://fonts.googleapis.com/css?family=Nunito:400&display=swap);
+@import url(https://fonts.googleapis.com/css?family=Roboto:220,220i&display=swap);
+@import url(https://fonts.googleapis.com/css?family=Nunito:300&display=swap);
 @import url(https://fonts.googleapis.com/css?family=Fira+Mono&display=swap);
 
 
@@ -69,7 +69,7 @@ html {
 
 body {
   font-family: var(--text-font-family), var(--text-font-family-fallback), var(--text-font-base);
-  font-weight: 280;
+  font-weight: 220;
   color: var(--text-color);
 }
 h1, h2, h3 {
